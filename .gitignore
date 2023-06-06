@@ -1,1 +1,5 @@
 /target
+jitmodule*
+dump*
+__pycache__
+diff.txt

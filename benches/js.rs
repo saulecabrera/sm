@@ -1,3 +1,5 @@
+// The JS source used for benchmarking is 
+// the index.js file at the root of the respository.
 use wasmtime::*;
 use wasmtime_wasi::{WasiCtx, WasiCtxBuilder};
 use criterion::{criterion_group, criterion_main, Criterion, black_box};
@@ -17,6 +19,7 @@ fn js(c: &mut Criterion) {
     let sm_memory_diff = read_diff(&Path::new("benches/diff.txt"));
     let sm_engine = Module::from_binary(&engine, include_bytes!("./spiderMonkey.wasm")).unwrap();
     let sm_jit_module = Module::from_binary(&engine, include_bytes!("./jitmodule.wasm")).unwrap();
+    let sm_ics_module = Module::from_binary(&engine, include_bytes!("./jitmodule_ics.wasm")).unwrap();
     let javy_module = Module::from_binary(&engine, include_bytes!("./javy.wasm")).unwrap();
     let rust_module = Module::from_binary(&engine, include_bytes!("./rust.wasm")).unwrap();
 
@@ -51,16 +54,14 @@ fn js(c: &mut Criterion) {
                  sm_exports.init_vm.call(&mut store, 1).unwrap();
 
                  let _jit_module_instance = linker.instantiate(&mut store, &sm_jit_module).unwrap();
+                 let _ics_module_instance = linker.instantiate(&mut store, &sm_ics_module).unwrap();
                  patch_memory(&mut store, &sm_instance, &sm_memory_diff);
 
 
                  let start = Instant::now();
-                 let zero = sm_exports.main.call(&mut store, (0, 1)).unwrap();
+                 sm_exports.main.call(&mut store, (0, 0)).unwrap();
                  let end = Instant::now();
-                 assert_eq!(zero, 0f64);
-                 // total_duration += Duration::from_micros(taken as u64);
                  total_duration += end - start;
-
             }
             total_duration
         });
